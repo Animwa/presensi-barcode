@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Presensi Barcode V4</title>
+
+<!-- Bootstrap 5 -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- Scanner library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+<!-- Export tools -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== TOPBAR ===================== -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <i class="bi bi-qr-code-scan"></i>
+      <div>
+        <div class="brand-title">Presensi Barcode</div>
+        <div class="brand-sub" id="eventNameLabel">Nama Acara</div>
+      </div>
+    </div>
+    <button class="device-chip" id="deviceChip" title="Ganti nama perangkat">
+      <i class="bi bi-phone"></i>
+      <span id="deviceNameLabel">Set device</span>
+    </button>
+  </div>
+</header>
+
+<!-- ===================== MAIN CONTENT ===================== -->
+<main class="app-main">
+
+  <!-- ---------- PAGE: SCANNER ---------- -->
+  <section id="page-scanner" class="page active">
+    <div class="scanner-card">
+      <div id="reader"></div>
+      <div class="scanner-hint"><i class="bi bi-arrows-fullscreen"></i> Arahkan kamera ke barcode / QR peserta</div>
+    </div>
+
+    <div id="scanStatus" class="scan-status scan-status-idle">
+      <i class="bi bi-camera2"></i>
+      <div>
+        <div class="scan-status-title">Menunggu scan...</div>
+        <div class="scan-status-sub">Kamera belakang aktif otomatis</div>
+      </div>
+    </div>
+
+    <div class="card result-card" id="resultCard" style="display:none;">
+      <div class="result-row">
+        <span class="result-label">Nama</span>
+        <span class="result-value" id="resNama">-</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Rumah</span>
+        <span class="result-value" id="resRumah">-</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Jam</span>
+        <span class="result-value mono" id="resJam">-</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- PAGE: DASHBOARD ---------- -->
+  <section id="page-dashboard" class="page">
+    <div class="dash-grid">
+      <div class="ring-wrap">
+        <svg viewBox="0 0 160 160" class="ring-svg">
+          <circle cx="80" cy="80" r="70" class="ring-bg"></circle>
+          <circle cx="80" cy="80" r="70" class="ring-fg" id="ringFg"></circle>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-percent" id="dashPersen">0%</div>
+          <div class="ring-label">Kehadiran</div>
+        </div>
+      </div>
+
+      <div class="stat-cards">
+        <div class="stat-card stat-total">
+          <i class="bi bi-people-fill"></i>
+          <div><div class="stat-num" id="dashTotal">0</div><div class="stat-label">Total Peserta</div></div>
+        </div>
+        <div class="stat-card stat-hadir">
+          <i class="bi bi-check-circle-fill"></i>
+          <div><div class="stat-num" id="dashHadir">0</div><div class="stat-label">Sudah Hadir</div></div>
+        </div>
+        <div class="stat-card stat-belum">
+          <i class="bi bi-hourglass-split"></i>
+          <div><div class="stat-num" id="dashBelum">0</div><div class="stat-label">Belum Hadir</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="refresh-note"><i class="bi bi-arrow-repeat"></i> Diperbarui otomatis tiap 10 detik — <span id="lastUpdate">-</span></div>
+  </section>
+
+  <!-- ---------- PAGE: RIWAYAT ---------- -->
+  <section id="page-riwayat" class="page">
+    <div class="card">
+      <div class="card-header-row">
+        <h2>Riwayat Scan</h2>
+        <button class="btn btn-sm btn-outline-light" id="btnRefreshLog"><i class="bi bi-arrow-clockwise"></i> Muat ulang</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-riwayat">
+          <thead><tr><th>Waktu</th><th>Barcode</th><th>Device</th><th>Hasil</th></tr></thead>
+          <tbody id="logTableBody">
+            <tr><td colspan="4" class="text-center text-muted">Memuat data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------- PAGE: ADMIN ---------- -->
+  <section id="page-admin" class="page">
+    <div class="card">
+      <h2>Export &amp; Kelola Data</h2>
+      <p class="text-muted-2">Unduh data presensi atau kelola pengaturan acara.</p>
+
+      <div class="admin-actions">
+        <button class="btn btn-admin" id="btnExportExcel"><i class="bi bi-file-earmark-excel"></i> Export Excel (.xlsx)</button>
+        <button class="btn btn-admin" id="btnExportPdf"><i class="bi bi-file-earmark-pdf"></i> Export PDF</button>
+        <button class="btn btn-admin btn-admin-danger" id="btnResetPresensi"><i class="bi bi-trash3"></i> Reset Presensi</button>
+      </div>
+
+      <hr class="admin-divider">
+
+      <h2>Pengaturan</h2>
+      <div class="setting-row">
+        <label for="apiUrlInput">URL API (Web App Google Apps Script)</label>
+        <input type="text" id="apiUrlInput" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      <div class="setting-row">
+        <label for="eventNameInput">Nama Acara (tampil di header)</label>
+        <input type="text" id="eventNameInput" class="form-control" placeholder="Contoh: Wisuda Angkatan 2026">
+      </div>
+      <button class="btn btn-save" id="btnSaveSettings"><i class="bi bi-save2"></i> Simpan Pengaturan</button>
+      <div class="setting-status" id="settingStatus"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===================== BOTTOM NAV ===================== -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="scanner"><i class="bi bi-qr-code-scan"></i><span>Scanner</span></button>
+  <button class="nav-btn" data-page="dashboard"><i class="bi bi-speedometer2"></i><span>Dashboard</span></button>
+  <button class="nav-btn" data-page="riwayat"><i class="bi bi-clock-history"></i><span>Riwayat</span></button>
+  <button class="nav-btn" data-page="admin"><i class="bi bi-gear-fill"></i><span>Admin</span></button>
+</nav>
+
+<!-- ===================== MODAL: DEVICE NAME ===================== -->
+<div class="modal-overlay" id="deviceModal">
+  <div class="modal-box">
+    <h3><i class="bi bi-phone"></i> Nama Perangkat / Panitia</h3>
+    <p class="text-muted-2">Nama ini akan tercatat di kolom "Device" setiap kali Anda melakukan scan. Contoh: "Panitia 1 - Andi".</p>
+    <input type="text" id="deviceNameInput" class="form-control" placeholder="Contoh: Panitia 1 - Andi">
+    <button class="btn btn-save w-100 mt-3" id="btnSaveDevice">Simpan &amp; Mulai Scan</button>
+  </div>
+</div>
+
+<!-- ===================== MODAL: ADMIN PASSWORD (RESET) ===================== -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal-box">
+    <h3><i class="bi bi-shield-lock"></i> Konfirmasi Reset</h3>
+    <p class="text-muted-2">Tindakan ini akan menghapus <b>semua data presensi</b> (sheet MASTER tidak terpengaruh). Masukkan password admin untuk melanjutkan.</p>
+    <input type="password" id="resetPasswordInput" class="form-control" placeholder="Password admin">
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn btn-outline-light w-50" id="btnCancelReset">Batal</button>
+      <button class="btn btn-admin-danger w-50" id="btnConfirmReset">Ya, Reset</button>
+    </div>
+    <div class="setting-status" id="resetStatus"></div>
+  </div>
+</div>
+
+<!-- Toast feedback -->
+<div id="toast" class="toast-box"></div>
+
+<script src="script.js"></script>
+<script src="scanner.js"></script>
+</body>
+</html>
