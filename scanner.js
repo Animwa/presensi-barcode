@@ -25,25 +25,20 @@
     if (stopBtn) stopBtn.disabled = !isRunning;
   }
 
-  function playBeep() {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.value = 880;
-      gainNode.gain.value = 0.06;
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.start();
-      setTimeout(() => {
-        oscillator.stop();
-        audioContext.close();
-      }, 120);
-    } catch (error) {
-      console.warn("Beep gagal diputar:", error);
-    }
-  }
+function playBeep() {
+
+    const audio = document.getElementById("beepSound");
+
+    if (!audio) return;
+
+    audio.pause();
+    audio.currentTime = 0;
+
+    audio.play().catch(err=>{
+        console.log(err);
+    });
+
+}
 
   async function pickBackCamera() {
     const devices = await Html5Qrcode.getCameras();
