@@ -1,36 +1,36 @@
-:root {
-  --app-bg: #f4f7fb;
-  --card-radius: 1.25rem;
-  --soft-border: rgba(13, 110, 253, 0.08);
-  --shadow-soft: 0 15px 40px rgba(15, 23, 42, 0.08);
-}
+(() => {
+  let html5QrCode = null;
+  let scannerRunning = false;
+  let scannerPausedForPending = false;
+  let lastDecodedText = "";
+  let lastScanTimestamp = 0;
+  let audioContext = null;
+  let audioUnlocked = false;
 
-body {
-  background: linear-gradient(180deg, #eef4ff 0%, var(--app-bg) 220px);
-  min-height: 100vh;
-  color: #1f2937;
-}
+  const SCAN_COOLDOWN_MS = 1800;
 
-.app-shell {
-  max-width: 1280px;
-}
+  function getStartButton() {
+    return document.getElementById("startScannerBtn");
+  }
 
-.hero-card,
-.card {
-  border-radius: var(--card-radius);
-  box-shadow: var(--shadow-soft) !important;
-}
+  function getStopButton() {
+    return document.getElementById("stopScannerBtn");
+  }
 
-.hero-card {
-  background:
-    radial-gradient(circle at top right, rgba(13, 110, 253, 0.12), transparent 35%),
-    linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
-}
+  function getReaderElementId() {
+    return "reader";
+  }
 
-.nav-pills .nav-link {
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  color: #334155;
-  border: 1px solid var(--soft-border);
-  font-weight: 600;
-}
+  function setButtonsState(isRunning) {
+    const startBtn = getStartButton();
+    const stopBtn = getStopButton();
+    if (startBtn) startBtn.disabled = isRunning;
+    if (stopBtn) stopBtn.disabled = !isRunning;
+  }
+
+  function ensureAudioReady() {
+    try {
+      const AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtor) return false;
+      if (!audioContext) {
+        audioContext = new AudioCtor();
