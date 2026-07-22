@@ -1,0 +1,239 @@
+:root {
+  --app-bg: #f4f7fb;
+  --card-radius: 1.25rem;
+  --soft-border: rgba(13, 110, 253, 0.08);
+  --shadow-soft: 0 15px 40px rgba(15, 23, 42, 0.08);
+}
+
+body {
+  background: linear-gradient(180deg, #eef4ff 0%, var(--app-bg) 220px);
+  min-height: 100vh;
+  color: #1f2937;
+}
+
+.app-shell {
+  max-width: 1280px;
+}
+
+.hero-card,
+.card {
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-soft) !important;
+}
+
+.hero-card {
+  background:
+    radial-gradient(circle at top right, rgba(13, 110, 253, 0.12), transparent 35%),
+    linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
+}
+
+.nav-pills .nav-link {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #334155;
+  border: 1px solid var(--soft-border);
+  font-weight: 600;
+}
+
+.nav-pills .nav-link.active {
+  background: #0d6efd;
+}
+
+.scanner-frame {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(13, 110, 253, 0.15);
+  background: #0b1220;
+  min-height: 340px;
+}
+
+#reader {
+  min-height: 340px;
+}
+
+#reader video {
+  border-radius: 0;
+}
+
+.result-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  padding: 1rem;
+  min-height: 150px;
+  background: #ffffff;
+}
+
+.result-card.empty-state {
+  display: grid;
+  place-items: center;
+  color: #64748b;
+  background: #f8fafc;
+}
+
+.result-card.success {
+  border-color: rgba(25, 135, 84, 0.2);
+  background: linear-gradient(180deg, #f1fff7 0%, #ffffff 100%);
+}
+
+.result-card.warning {
+  border-color: rgba(255, 193, 7, 0.3);
+  background: linear-gradient(180deg, #fffaf0 0%, #ffffff 100%);
+}
+
+.result-card.error {
+  border-color: rgba(220, 53, 69, 0.25);
+  background: linear-gradient(180deg, #fff2f3 0%, #ffffff 100%);
+}
+
+.info-panel,
+.summary-box {
+  border-radius: 1rem;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  padding: 1rem;
+}
+
+.info-panel > div,
+.summary-box li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed rgba(148, 163, 184, 0.25);
+}
+
+.info-panel > div:last-child,
+.summary-box li:last-child {
+  border-bottom: 0;
+}
+
+.info-panel-stacked > div {
+  align-items: flex-start;
+}
+
+.label {
+  font-weight: 600;
+  color: #475569;
+}
+
+.stat-card {
+  overflow: hidden;
+}
+
+.stat-card .card-body {
+  position: relative;
+}
+
+.stat-card .card-body::after {
+  content: "";
+  position: absolute;
+  inset: auto -20px -20px auto;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: rgba(13, 110, 253, 0.08);
+}
+
+.stat-card.success .card-body::after {
+  background: rgba(25, 135, 84, 0.12);
+}
+
+.stat-card.warning .card-body::after {
+  background: rgba(255, 193, 7, 0.18);
+}
+
+.stat-card.info .card-body::after {
+  background: rgba(13, 202, 240, 0.16);
+}
+
+.dashboard-progress {
+  height: 1.25rem;
+  border-radius: 999px;
+  background: #e2e8f0;
+}
+
+.dashboard-progress .progress-bar {
+  font-weight: 700;
+}
+
+.badge-soft-success {
+  color: #146c43;
+  background: rgba(25, 135, 84, 0.12);
+}
+
+.badge-soft-warning {
+  color: #997404;
+  background: rgba(255, 193, 7, 0.2);
+}
+
+.badge-soft-danger {
+  color: #b02a37;
+  background: rgba(220, 53, 69, 0.12);
+}
+
+.badge-soft-secondary {
+  color: #475569;
+  background: rgba(148, 163, 184, 0.18);
+}
+
+.table thead th {
+  white-space: nowrap;
+  font-size: 0.84rem;
+  color: #475569;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+.html5-qrcode-element {
+  border-radius: 0.75rem !important;
+}
+
+.html5-qrcode-element,
+#html5-qrcode-button-camera-permission,
+#html5-qrcode-button-camera-start,
+#html5-qrcode-button-camera-stop,
+#html5-qrcode-button-file-selection {
+  box-shadow: none !important;
+}
+
+.html5-qrcode-element,
+#html5-qrcode-button-camera-permission,
+#html5-qrcode-button-camera-start,
+#html5-qrcode-button-camera-stop {
+  border: none !important;
+}
+
+@media (max-width: 991.98px) {
+  .scanner-frame,
+  #reader {
+    min-height: 280px;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .nav,
+  #startScannerBtn,
+  #stopScannerBtn,
+  #manualSubmitBtn,
+  #refreshDashboardBtn,
+  #refreshHistoryBtn,
+  #exportExcelBtn,
+  #exportPdfBtn,
+  #resetPresensiBtn,
+  .btn,
+  .modal {
+    display: none !important;
+  }
+
+  .card,
+  .hero-card {
+    box-shadow: none !important;
+    border: 1px solid #dbe2ea !important;
+  }
+}

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presensi Barcode V4</title>
+  <meta name="theme-color" content="#0d6efd">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="app-shell container py-3 py-lg-4">
+    <header class="hero-card card border-0 shadow-sm mb-3">
+      <div class="card-body p-4">
+        <div class="d-flex flex-column flex-lg-row gap-3 justify-content-between align-items-lg-center">
+          <div>
+            <p class="text-uppercase text-primary fw-semibold small mb-1">Presensi Barcode V4</p>
+            <h1 class="h3 mb-2">Scanner multi-device untuk acara besar</h1>
+            <p class="text-secondary mb-0">
+              Scan barcode atau QR Code dari banyak perangkat sekaligus, simpan ke Google Sheets secara real-time, dan pantau dashboard langsung dari browser.
+            </p>
+          </div>
+          <div class="d-flex flex-wrap gap-2 align-self-start">
+            <span id="apiStatusBadge" class="badge text-bg-secondary">API belum dikonfigurasi</span>
+            <span id="scannerStatusBadge" class="badge text-bg-dark">Scanner berhenti</span>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#settingsModal">
+              <i class="bi bi-gear me-1"></i>Pengaturan
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="alertBox" class="mb-3"></div>
+
+    <ul class="nav nav-pills nav-fill gap-2 mb-3" id="mainTab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="scanner-tab" data-bs-toggle="tab" data-bs-target="#scanner-panel" type="button" role="tab">
+          <i class="bi bi-upc-scan me-1"></i>Scanner
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard-panel" type="button" role="tab">
+          <i class="bi bi-speedometer2 me-1"></i>Dashboard
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="admin-tab" data-bs-toggle="tab" data-bs-target="#admin-panel" type="button" role="tab">
+          <i class="bi bi-shield-lock me-1"></i>Admin
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <section class="tab-pane fade show active" id="scanner-panel" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-lg-7">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+                  <div>
+                    <h2 class="h5 mb-1">Scanner kamera</h2>
+                    <p class="text-secondary mb-0">Gunakan kamera belakang untuk scan barcode atau QR peserta.</p>
+                  </div>
+                  <div class="d-flex gap-2">
+                    <button id="startScannerBtn" class="btn btn-success">
+                      <i class="bi bi-camera-video me-1"></i>Mulai
+                    </button>
+                    <button id="stopScannerBtn" class="btn btn-outline-danger" disabled>
+                      <i class="bi bi-stop-circle me-1"></i>Berhenti
+                    </button>
+                  </div>
+                </div>
+
+                <div class="scanner-frame mb-3">
+                  <div id="reader"></div>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="manualBarcodeInput" class="form-label">Input manual barcode</label>
+                    <div class="input-group">
+                      <input id="manualBarcodeInput" type="text" class="form-control" placeholder="Contoh: 100001">
+                      <button id="manualSubmitBtn" class="btn btn-primary" type="button">Kirim</button>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Info perangkat</label>
+                    <div class="info-panel">
+                      <div><span class="label">Device</span><span id="deviceNameText">Belum diatur</span></div>
+                      <div><span class="label">Browser</span><span id="browserInfoText">-</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-5">
+            <div class="card border-0 shadow-sm mb-3">
+              <div class="card-body">
+                <h2 class="h5 mb-3">Hasil scan terakhir</h2>
+                <div id="lastScanCard" class="result-card empty-state">
+                  Belum ada scan.
+                </div>
+              </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+              <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h2 class="h5 mb-0">Riwayat terbaru</h2>
+                  <button id="refreshHistoryBtn" class="btn btn-sm btn-outline-primary">Refresh</button>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th>Jam</th>
+                        <th>Barcode</th>
+                        <th>Nama</th>
+                        <th>Hasil</th>
+                      </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                      <tr><td colspan="4" class="text-center text-secondary py-4">Belum ada data.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="dashboard-panel" role="tabpanel">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm">
+              <div class="card-body">
+                <p class="text-secondary mb-1">Jumlah Peserta</p>
+                <h3 id="totalPesertaText" class="display-6 mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm success">
+              <div class="card-body">
+                <p class="text-secondary mb-1">Hadir</p>
+                <h3 id="hadirText" class="display-6 mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm warning">
+              <div class="card-body">
+                <p class="text-secondary mb-1">Belum Hadir</p>
+                <h3 id="belumHadirText" class="display-6 mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="card stat-card border-0 shadow-sm info">
+              <div class="card-body">
+                <p class="text-secondary mb-1">Persentase</p>
+                <h3 id="persentaseText" class="display-6 mb-0">0%</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+              <div>
+                <h2 class="h5 mb-1">Ringkasan kehadiran hari ini</h2>
+                <p class="text-secondary mb-0">Data diperbarui otomatis saat tab dashboard aktif.</p>
+              </div>
+              <div class="d-flex gap-2">
+                <span id="lastDashboardUpdate" class="small text-secondary align-self-center">Belum diperbarui</span>
+                <button id="refreshDashboardBtn" class="btn btn-outline-primary">Refresh</button>
+              </div>
+            </div>
+
+            <div class="progress dashboard-progress mb-4" role="progressbar" aria-label="Persentase kehadiran">
+              <div id="attendanceProgressBar" class="progress-bar" style="width: 0%">0%</div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-lg-6">
+                <div class="summary-box">
+                  <h3 class="h6">Status sistem</h3>
+                  <ul class="list-unstyled mb-0">
+                    <li><span class="label">Mode</span><span>Multi-device real-time</span></li>
+                    <li><span class="label">Tanggal</span><span id="dashboardDateText">-</span></li>
+                    <li><span class="label">Total scan</span><span id="dashboardTotalScanText">0</span></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="summary-box">
+                  <h3 class="h6">Keterangan</h3>
+                  <p class="mb-0 text-secondary">
+                    Anti double scan dicek di backend dengan kunci data per barcode dan tanggal yang sama.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab-pane fade" id="admin-panel" role="tabpanel">
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <h2 class="h5 mb-3">Aksi admin</h2>
+                <div class="d-grid gap-2">
+                  <button id="exportExcelBtn" class="btn btn-outline-success">
+                    <i class="bi bi-file-earmark-excel me-1"></i>Export Excel
+                  </button>
+                  <button id="exportPdfBtn" class="btn btn-outline-danger">
+                    <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+                  </button>
+                  <button id="resetPresensiBtn" class="btn btn-outline-warning">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset Presensi Hari Ini
+                  </button>
+                </div>
+                <hr>
+                <p class="small text-secondary mb-0">
+                  Export Excel menghasilkan file `.csv` yang bisa dibuka di Microsoft Excel. Export PDF menggunakan tampilan print browser.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+              <div class="card-body">
+                <h2 class="h5 mb-3">Status koneksi</h2>
+                <div class="info-panel info-panel-stacked">
+                  <div><span class="label">API URL</span><span id="apiUrlPreview">Belum diatur</span></div>
+                  <div><span class="label">API Key</span><span id="apiKeyPreview">Belum diatur</span></div>
+                  <div><span class="label">Perangkat</span><span id="adminDeviceNameText">Belum diatur</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header">
+          <h2 class="modal-title fs-5">Pengaturan aplikasi</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="apiUrlInput" class="form-label">URL Web App Google Apps Script</label>
+            <input id="apiUrlInput" type="url" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+          </div>
+          <div class="mb-3">
+            <label for="apiKeyInput" class="form-label">API Key</label>
+            <input id="apiKeyInput" type="text" class="form-control" placeholder="Kosongkan jika tidak dipakai">
+          </div>
+          <div class="mb-3">
+            <label for="deviceNameInput" class="form-label">Nama perangkat</label>
+            <input id="deviceNameInput" type="text" class="form-control" placeholder="Contoh: Panitia 1 - Android">
+          </div>
+          <p class="small text-secondary mb-0">
+            Pengaturan disimpan di browser perangkat ini agar setiap panitia bisa memakai identitas device yang berbeda.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button id="saveSettingsBtn" type="button" class="btn btn-primary" data-bs-dismiss="modal">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script src="./script.js"></script>
+  <script src="./scanner.js"></script>
+</body>
+</html>
